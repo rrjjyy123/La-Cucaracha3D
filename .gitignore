@@ -1,0 +1,8 @@
+node_modules
+dist
+.vite-cache
+.DS_Store
+*.local
+
+# 참고 자료(룰북/게임판 사진) — 저작물이므로 커밋하지 않음
+참고/
