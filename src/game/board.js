@@ -13,6 +13,25 @@ export const KINDS = ['fork', 'knife', 'spoon'];
 export const KIND_LABEL = { fork: '포크', knife: '나이프', spoon: '숟가락' };
 
 /**
+ * 실물 게임판의 종류 배치를 그대로 옮긴 표 (참고/IMG＿7035.jpg 를 줄 단위로 확대해 판독).
+ * 실물은 종류별 자리가 고정되어 있고, 이 24개를 돌려서 4가지 기본 미로를 만든다.
+ * 줄마다 왼쪽→오른쪽, 핀 인덱스 순서 그대로. F=포크, K=나이프, S=숟가락.
+ * 합계가 8/8/8 로 떨어져 룰북 구성물(포크 8·나이프 8·숟가락 8)과 일치한다.
+ */
+const KIND_MAP = [
+  'FKS', //  0줄 (열 1,3,5)
+  'SFKF', // 1줄 (열 0,2,4,6)
+  'SFS', //  2줄
+  'KKSK', // 3줄
+  'KFK', //  4줄
+  'FSFS', // 5줄
+  'SKF', //  6줄
+]
+  .join('')
+  .split('')
+  .map((c) => ({ F: 'fork', K: 'knife', S: 'spoon' })[c]);
+
+/**
  * 고정핀 24개. col/row 는 0..6, x/y 는 판 중심 기준 좌표(-3..3).
  * 순서는 위(row 0)에서 아래로, 각 줄은 왼쪽에서 오른쪽으로.
  */
@@ -27,7 +46,7 @@ export const PINS = (() => {
         row,
         x: col - (GRID - 1) / 2,
         y: (GRID - 1) / 2 - row, // +y 가 화면 위쪽
-        kind: KINDS[pins.length % 3],
+        kind: KIND_MAP[pins.length],
       });
     }
   }

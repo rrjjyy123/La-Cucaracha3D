@@ -15,7 +15,7 @@ import {
   outcomeText,
   currentPlayer,
 } from './game/rules.js';
-import { saveGame, loadGame, clearGame } from './game/state.js';
+import { saveGame, loadGame, clearGame, loadCustomLayouts } from './game/state.js';
 
 import { createStage } from './render/scene.js';
 import { createBoard } from './render/board3d.js';
@@ -26,6 +26,7 @@ import { createEffects } from './render/effects.js';
 
 import { createSetup } from './ui/setup.js';
 import { createHud } from './ui/hud.js';
+import { createEditor } from './ui/editor.js';
 import * as sfx from './audio/sfx.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -38,7 +39,33 @@ const roach3d = createRoach3D(stage.scene);
 const dice = createDice(stage.scene, { x: 8.3, y: 0.15, z: 0 }); // 트레이 오른쪽 테두리 위
 const fx = createEffects(stage.scene, board.group);
 
-const hud = createHud();
+const hud = createHud({ onEditLayout: ({ orients }) => editor.open({ orients }) });
+
+// 미로 직접 만들기 — 살아 있는 3D 판을 그대로 편집기로 쓴다
+let editing = false;
+let hudWasHidden = true;
+const editor = createEditor({
+  applyOrients: (o) => utensils.setOrients(o),
+  spin: (i, orient) => utensils.spin(i, orient),
+  setEditing: (on) => {
+    editing = on;
+    roach3d.group.visible = !on;
+    utensils.setHighlight(on ? utensils.items.map((it) => it.i) : [], { soft: on });
+    if (on) {
+      running = false;
+      sfx.stopSkitter();
+      hudWasHidden = $('#hud').hidden;
+      hud.hide();
+      board.setActiveTrap(null);
+    } else {
+      if (!hudWasHidden) hud.show();
+      if (game) {
+        utensils.setOrients(game.orients);
+        render();
+      }
+    }
+  },
+});
 
 // ── 게임 상태 ──────────────────────────────────────────────────────────────
 let game = null;
@@ -61,6 +88,8 @@ function refreshHighlight() {
 function render() {
   hud.update(game);
   refreshHighlight();
+  // 지금 차례인 사람의 함정에만 빛기둥을 켠다
+  board.setActiveTrap(game.phase === 'game-over' ? null : currentPlayer(game).trap);
 }
 
 function startTurnTimer() {
@@ -92,14 +121,14 @@ function startGame(config) {
   setup.hide();
   hud.show();
   hud.mount(config.players);
-  beginRound(createGame(config));
+  beginRound(createGame({ ...config, layouts: loadCustomLayouts() }));
 }
 
 function resumeGame(saved) {
   setup.hide();
   hud.show();
   hud.mount(saved.players);
-  const g = createGame({ players: saved.players, settings: saved.settings });
+  const g = createGame({ players: saved.players, settings: saved.settings, layouts: loadCustomLayouts() });
   g.players.forEach((p, i) => (p.tokens = saved.players[i].tokens));
   g.round = saved.round;
   g.current = saved.current;
@@ -165,18 +194,19 @@ async function onCaught(trapId) {
   }
 
   const layoutId = await hud.roundOver(game);
-  beginRound(startRound(game, layoutId));
+  beginRound(startRound(game, layoutId, loadCustomLayouts()));
 }
 
 // ── 프레임 루프 ────────────────────────────────────────────────────────────
 stage.onFrame.add((dt, time) => {
   utensils.update(dt, time);
   dice.update(dt, time);
+  board.update(dt, time);
   fx.update(dt);
 
   if (!game) return;
 
-  if (running && !busy) {
+  if (running && !busy && !editing) {
     // 물리는 고정 타임스텝으로 (프레임 속도와 무관하게 같은 움직임)
     acc = Math.min(acc + dt, 0.25);
     while (acc >= STEP) {
@@ -240,16 +270,17 @@ function tryTap(ev) {
   const i = pick(ev);
   if (i < 0) return;
   lastTap = performance.now();
-  doRotate(i);
+  if (editing) editor.toggle(i);
+  else doRotate(i);
 }
 canvas.addEventListener('pointerup', tryTap);
 canvas.addEventListener('click', tryTap);
 
 function onMove(ev) {
   if (ev.pointerType && ev.pointerType !== 'mouse') return;
-  const i = game && game.phase === 'turn' ? pick(ev) : -1;
+  const i = editing || (game && game.phase === 'turn') ? pick(ev) : -1;
   utensils.setHover(i);
-  canvas.style.cursor = i >= 0 && canRotate(game, i) ? 'pointer' : '';
+  canvas.style.cursor = i >= 0 && (editing || canRotate(game, i)) ? 'pointer' : '';
 }
 canvas.addEventListener('pointermove', onMove);
 
@@ -257,6 +288,7 @@ canvas.addEventListener('pointerleave', () => utensils.setHover(-1));
 
 // ── 화면·메뉴 ──────────────────────────────────────────────────────────────
 const setup = createSetup({
+  onEditLayout: ({ orients }) => editor.open({ orients }),
   onStart: startGame,
   onResume: () => {
     const saved = loadGame();
@@ -279,7 +311,7 @@ $('#btn-restart').addEventListener('click', () => {
     settings: game.settings,
   };
   hud.mount(cfg.players);
-  beginRound(createGame(cfg));
+  beginRound(createGame({ ...cfg, layouts: loadCustomLayouts() }));
 });
 $('#btn-new').addEventListener('click', () => {
   $('#menu').classList.remove('show');
@@ -318,7 +350,7 @@ $('#btn-win-again').addEventListener('click', () => {
     settings: game.settings,
   };
   hud.mount(cfg.players);
-  beginRound(createGame(cfg));
+  beginRound(createGame({ ...cfg, layouts: loadCustomLayouts() }));
 });
 
 function toSetup() {

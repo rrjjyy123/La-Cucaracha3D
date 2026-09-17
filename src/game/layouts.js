@@ -31,4 +31,9 @@ export const LAYOUTS = [
   },
 ];
 
-export const getLayout = (id) => LAYOUTS.find((l) => l.id === id) || LAYOUTS[0];
+export const getLayout = (id, extra = []) =>
+  LAYOUTS.find((l) => l.id === id) || extra.find((l) => l.id === id) || LAYOUTS[0];
+
+/** 직접 만든 미로가 쓸 수 있는 형태인지 */
+export const isValidOrients = (arr) =>
+  Array.isArray(arr) && arr.length === 24 && arr.every((o) => o === 'H' || o === 'V');

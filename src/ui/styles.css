@@ -274,6 +274,55 @@ h3 {
   grid-area: 2 / 2;
 }
 
+.timer-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 6px 10px;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  flex-wrap: wrap;
+}
+.timer-field input[type='number'] {
+  width: 84px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  padding: 8px 10px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+}
+.timer-field input[type='number']:focus {
+  outline: 2px solid var(--accent);
+}
+.timer-field input[type='number']:disabled {
+  opacity: 0.35;
+}
+.timer-field .unit {
+  font-size: 13px;
+  color: var(--ink-dim);
+  margin-right: 4px;
+}
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+.check input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 /* ── 버튼 ─────────────────────────────────────────────── */
 .btn {
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -642,6 +691,123 @@ h3 {
   border-color: var(--accent);
   color: var(--ink);
   background: rgba(255, 154, 60, 0.13);
+}
+.layout-pick button {
+  position: relative;
+}
+.layout-pick .lname {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.layout-pick .del {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  line-height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--ink-dim);
+  font-size: 15px;
+  font-weight: 700;
+}
+.layout-pick .del:hover {
+  background: var(--danger);
+  color: #fff;
+}
+.layout-pick button.make {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-style: dashed;
+  min-height: 104px;
+}
+.layout-pick .plus {
+  font-size: 26px;
+  line-height: 1;
+  color: var(--accent);
+}
+
+/* ── 미로 직접 만들기 바 ──────────────────────────────── */
+#editor-bar {
+  position: fixed;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 30;
+  width: min(680px, calc(100vw - 24px));
+}
+.edit-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: rgba(30, 18, 10, 0.95);
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+}
+.edit-head {
+  flex: 1 1 190px;
+  min-width: 0;
+}
+.edit-head b {
+  display: block;
+  font-family: 'Jua', 'Noto Sans KR', sans-serif;
+  font-size: 17px;
+  color: var(--accent-2);
+}
+.edit-head span {
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+#edit-name {
+  flex: 0 1 150px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  padding: 8px 10px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+#edit-name:focus {
+  outline: 2px solid var(--accent);
+}
+.edit-presets {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.edit-presets button {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.edit-presets button:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--ink);
+}
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.edit-actions .btn {
+  padding: 9px 18px;
+  font-size: 14px;
 }
 
 /* ── 규칙 ─────────────────────────────────────────────── */

@@ -15,6 +15,23 @@ import {
   toWorldZ,
 } from './layout.js';
 
+/** 위로 갈수록 옅어지는 세로 그라데이션 — 빛기둥에 쓴다 */
+function beamTexture() {
+  const c = document.createElement('canvas');
+  c.width = 4;
+  c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createLinearGradient(0, 128, 0, 0);
+  grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+  grad.addColorStop(0.35, 'rgba(255,255,255,0.32)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 4, 128);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
 const OUT = HALF + RIM_W; // 턱 바깥면
 const PIT_OUT = OUT + PIT_W; // 구덩이 바깥면
 const TRAY_X = PIT_OUT + TRAY_LIP;
@@ -126,6 +143,7 @@ export function createBoard(scene) {
 
   // ── 함정 구덩이 ───────────────────────────────────────────────────────
   const trapParts = {};
+  const beamMap = beamTexture();
   for (const t of TRAPS) {
     const [z0, z1] = trapZRange(t);
     const sign = Math.sign(t.x);
@@ -178,11 +196,36 @@ export function createBoard(scene) {
     door.receiveShadow = true;
     group.add(door);
 
-    trapParts[t.id] = { door, trim, ramp, pitFloor, center: { x: cx, z: cz }, pitY: -PIT_DEPTH };
+    // 목표 표시용 빛기둥 — 차례인 사람의 함정 위에서 그 사람 색으로 맥동한다
+    const beam = new THREE.Mesh(
+      new THREE.CylinderGeometry(PIT_W * 0.36, PIT_W * 0.46, 5.4, 20, 1, true),
+      new THREE.MeshBasicMaterial({
+        map: beamMap,
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+      }),
+    );
+    beam.position.set(cx, -PIT_DEPTH + 2.7, cz);
+    beam.visible = false;
+    group.add(beam);
+
+    const lamp = new THREE.PointLight(0xffffff, 0, 7, 1.7);
+    lamp.position.set(cx, -PIT_DEPTH + 1.1, cz);
+    group.add(lamp);
+
+    trapParts[t.id] = { door, trim, ramp, pitFloor, beam, lamp, center: { x: cx, z: cz }, pitY: -PIT_DEPTH };
   }
+
+  let activeTrap = null;
+  let colors = {};
 
   /** 열린 함정은 차단문을 치우고, 주인 색으로 띠를 칠한다 */
   function setTraps(openTraps, ownerColors = {}) {
+    colors = ownerColors;
     for (const t of TRAPS) {
       const p = trapParts[t.id];
       const open = openTraps.includes(t.id);
@@ -198,8 +241,35 @@ export function createBoard(scene) {
       p.ramp.material.color.set(c ?? 0xc8541c);
       p.ramp.material.emissive.set(c ?? 0x000000);
       p.ramp.material.emissiveIntensity = c ? 0.26 : 0;
+      p.beam.material.color.set(c ?? 0xffc47a);
+      p.lamp.color.set(c ?? 0xffc47a);
+      p.beam.visible = false;
+      p.lamp.intensity = 0;
+    }
+    setActiveTrap(activeTrap);
+  }
+
+  /** 지금 차례인 사람의 함정만 빛기둥을 켠다 */
+  function setActiveTrap(trapId) {
+    activeTrap = trapId && colors[trapId] ? trapId : null;
+    for (const t of TRAPS) {
+      const p = trapParts[t.id];
+      const on = t.id === activeTrap;
+      p.beam.visible = on;
+      if (!on) p.lamp.intensity = 0;
     }
   }
 
-  return { group, setTraps, trapParts, floor };
+  /** 빛기둥 맥동 — 프레임마다 호출 */
+  function update(_dt, time) {
+    if (!activeTrap) return;
+    const p = trapParts[activeTrap];
+    const pulse = 0.5 + 0.5 * Math.sin(time * 2.8);
+    p.beam.material.opacity = 0.3 + pulse * 0.4;
+    p.beam.scale.setScalar(0.96 + pulse * 0.08);
+    p.lamp.intensity = 5 + pulse * 7;
+    p.ramp.material.emissiveIntensity = 0.3 + pulse * 0.5;
+  }
+
+  return { group, setTraps, setActiveTrap, update, trapParts, floor };
 }

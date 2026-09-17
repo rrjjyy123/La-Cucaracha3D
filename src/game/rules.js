@@ -29,15 +29,16 @@ export function validateTraps(traps) {
 
 export const DEFAULT_SETTINGS = {
   speed: 'normal',
-  turnSeconds: 5, // 0 이면 무제한
+  turnSeconds: 15, // 0 이면 무제한
   mode: 'win', // 'win' = 5개 모으면 승리 / 'lose' = 룰북 변형: 5개 모으면 패배
   layoutId: 'rings',
   quality: 'high',
 };
 
-export function createGame({ players, settings = {} }) {
+/** @param {object[]} layouts 직접 만든 미로까지 포함해 id 를 찾을 목록 */
+export function createGame({ players, settings = {}, layouts = [] }) {
   const s = { ...DEFAULT_SETTINGS, ...settings };
-  const layout = getLayout(s.layoutId);
+  const layout = getLayout(s.layoutId, layouts);
   return {
     settings: s,
     speed: SPEEDS[s.speed] ?? SPEEDS.normal,
@@ -115,8 +116,8 @@ export function catchRoach(g, trapId) {
 }
 
 /** 다음 라운드 준비 — 토큰을 받은 사람부터 시작한다 */
-export function startRound(g, layoutId = g.layoutId) {
-  const layout = getLayout(layoutId);
+export function startRound(g, layoutId = g.layoutId, layouts = []) {
+  const layout = getLayout(layoutId, layouts);
   return {
     ...g,
     orients: layout.orients.slice(),

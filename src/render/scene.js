@@ -63,8 +63,8 @@ export function createStage(container) {
   // 화면 비율이 달라져도 게임판 전체가 딱 맞게 보이도록 카메라 거리를 맞춘다.
   // 바운딩 박스의 여덟 꼭짓점을 카메라 축에 투영해 필요한 최소 거리를 구한다.
   const FIT_BOX = [
-    [-8.8, -1.2, -6.6],
-    [8.8, 0.9, 6.6],
+    [-8.2, -0.95, -6.0],
+    [8.2, 0.8, 6.0],
   ];
   const corners = [];
   for (const x of [FIT_BOX[0][0], FIT_BOX[1][0]])
@@ -81,7 +81,7 @@ export function createStage(container) {
     userMoved = true;
   });
 
-  function fitView(margin = 1.05) {
+  function fitView(margin = 1.0) {
     _dir.copy(camera.position).sub(controls.target);
     if (_dir.lengthSq() < 1e-6) _dir.set(0, 1.4, 1);
     _dir.normalize();

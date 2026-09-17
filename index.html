@@ -56,11 +56,10 @@
           </div>
           <div class="field">
             <label>차례 제한 시간</label>
-            <div class="seg" id="timer-seg">
-              <button data-sec="3">3초</button>
-              <button data-sec="5" class="active">5초</button>
-              <button data-sec="8">8초</button>
-              <button data-sec="0">무제한</button>
+            <div class="timer-field">
+              <input type="number" id="turn-seconds" min="3" max="120" step="1" value="15" inputmode="numeric" aria-label="차례 제한 시간(초)" />
+              <span class="unit">초</span>
+              <label class="check"><input type="checkbox" id="turn-unlimited" /> 무제한</label>
             </div>
           </div>
         </div>
@@ -198,6 +197,22 @@
           <p class="credit">원작: Ravensburger «La Cucaracha» (Peter-Paul Joopen) · 한국어판 코리아보드게임즈</p>
         </div>
         <div class="actions"><button class="btn primary" id="btn-rules-close">닫기</button></div>
+      </div>
+    </div>
+
+    <!-- 미로 직접 만들기 -->
+    <div id="editor-bar" hidden>
+      <div class="edit-inner">
+        <div class="edit-head">
+          <b>미로 직접 만들기</b>
+          <span>식사 도구를 눌러 가로·세로로 돌리세요</span>
+        </div>
+        <input type="text" id="edit-name" maxlength="12" placeholder="미로 이름" />
+        <div class="edit-presets" id="edit-presets"></div>
+        <div class="edit-actions">
+          <button class="btn ghost" id="btn-edit-cancel">취소</button>
+          <button class="btn primary" id="btn-edit-save">저장</button>
+        </div>
       </div>
     </div>
 

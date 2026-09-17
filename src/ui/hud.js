@@ -1,13 +1,13 @@
 // 인게임 HUD — 플레이어 바, 제한 시간 링, 주사위 결과, 배너·토스트
 import { FACE_ICON, FACE_LABEL } from '../game/dice.js';
 import { TARGET_TOKENS } from '../game/rules.js';
-import { LAYOUTS } from '../game/layouts.js';
-import { layoutThumb } from './setup.js';
+import { getTrap } from '../game/board.js';
+import { renderLayoutPicker } from './setup.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const RING = 2 * Math.PI * 9.2;
 
-export function createHud() {
+export function createHud({ onEditLayout } = {}) {
   const hud = $('#hud');
   const bar = $('#players-bar');
   const hint = $('#action-hint');
@@ -68,8 +68,10 @@ export function createHud() {
       dieBox.hidden = true;
     }
 
-    if (g.phase === 'roll') setHint(`${g.players[g.current].name} 차례 — 주사위를 굴리세요`);
-    else if (g.phase === 'turn') setHint('빛나는 식사 도구를 눌러 돌리세요');
+    const me = g.players[g.current];
+    const goal = getTrap(me.trap)?.label ?? '';
+    if (g.phase === 'roll') setHint(`${me.name} 차례 — 주사위를 굴려 ${goal} 함정으로 유인하세요`);
+    else if (g.phase === 'turn') setHint(`빛나는 식사 도구를 눌러 ${goal} 함정으로 가는 길을 만드세요`);
     else setHint('');
   }
 
@@ -124,17 +126,30 @@ export function createHud() {
 
       let picked = g.layoutId;
       const wrap = $('#round-layouts');
-      wrap.innerHTML = '';
-      for (const l of LAYOUTS) {
-        const b = document.createElement('button');
-        b.innerHTML = `${layoutThumb(l)}${l.name}`;
-        b.classList.toggle('active', l.id === picked);
-        b.addEventListener('click', () => {
-          picked = l.id;
-          [...wrap.children].forEach((c) => c.classList.toggle('active', c === b));
+      const draw = () => {
+        const all = renderLayoutPicker(wrap, {
+          selected: picked,
+          onPick: (id) => {
+            picked = id;
+            draw();
+          },
+          onEdit: onEditLayout
+            ? async () => {
+                const start = all.find((l) => l.id === picked)?.orients;
+                panel.classList.remove('show');
+                const made = await onEditLayout({ orients: start });
+                panel.classList.add('show');
+                if (made) picked = made.id;
+                draw();
+              }
+            : null,
+          onDelete: (id) => {
+            if (picked === id) picked = 'rings';
+            draw();
+          },
         });
-        wrap.appendChild(b);
-      }
+      };
+      draw();
 
       const go = () => {
         $('#btn-next-round').removeEventListener('click', go);

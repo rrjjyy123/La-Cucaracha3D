@@ -32,6 +32,17 @@ describe('격자', () => {
     expect(PINS_BY_KIND.spoon).toHaveLength(8);
   });
 
+  it('종류 배치가 실물 사진(참고/IMG＿7035.jpg)과 같다', () => {
+    // 실물은 종류별 자리가 고정되어 있고, 이 24개를 돌려서 기본 미로들을 만든다.
+    const expected = ['FKS', 'SFKF', 'SFS', 'KKSK', 'KFK', 'FSFS', 'SKF'];
+    const actual = [0, 1, 2, 3, 4, 5, 6].map((r) =>
+      PINS.filter((p) => p.row === r)
+        .map((p) => p.kind[0].toUpperCase())
+        .join(''),
+    );
+    expect(actual).toEqual(expected);
+  });
+
   it('어떤 방향 조합에서도 도구끼리 겹치지 않는다', () => {
     // 겹침 = 같은 직선 위에서 구간이 실제로 포개지는 경우
     const overlaps = (a, b) => {
