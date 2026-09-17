@@ -11,7 +11,7 @@ export const CLEARANCE = ROACH_R + WALL_HALF;
 export const STEP = 1 / 120; // 물리 고정 타임스텝(초)
 
 /** 난이도별 이동 속도 (유닛/초) */
-export const SPEEDS = { slow: 1.5, normal: 2.3, fast: 3.2 };
+export const SPEEDS = { slow: 1.5, normal: 2.3, fast: 4.3 };
 export const SPEED_LABEL = { slow: '느림', normal: '보통', fast: '빠름' };
 
 export function createRoach(speed = SPEEDS.normal, rng = Math.random) {

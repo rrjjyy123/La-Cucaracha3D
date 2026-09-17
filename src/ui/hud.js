@@ -13,6 +13,9 @@ export function createHud({ onEditLayout } = {}) {
   const hint = $('#action-hint');
   const rollBtn = $('#btn-roll');
   const dieBox = $('#die-result');
+  const clock = $('#turn-clock');
+  const clockNum = $('.tc-num', clock);
+  const clockBar = $('.tc-bar i', clock);
   const banner = $('#turn-banner');
   const toast = $('#toast');
 
@@ -75,12 +78,26 @@ export function createHud({ onEditLayout } = {}) {
     else setHint('');
   }
 
-  /** 남은 시간 0~1 */
-  function setTimer(idx, k) {
+  /**
+   * 남은 시간 표시.
+   * @param {number} idx 현재 플레이어
+   * @param {number} k 남은 비율 0~1
+   * @param {number} seconds 남은 초
+   * @param {string} color 현재 플레이어 색
+   */
+  function setTimer(idx, k, seconds, color) {
     const c = cards[idx];
-    if (!c) return;
-    c.fg.setAttribute('stroke-dashoffset', String(RING * (1 - k)));
+    if (c) c.fg.setAttribute('stroke-dashoffset', String(RING * (1 - k)));
+    clock.hidden = false;
+    clock.style.color = color;
+    clock.classList.toggle('low', seconds <= 5);
+    clockNum.textContent = String(Math.max(0, Math.ceil(seconds)));
+    clockBar.style.transform = `scaleX(${Math.max(0, Math.min(1, k))})`;
   }
+
+  const hideTimer = () => {
+    clock.hidden = true;
+  };
 
   function setHint(text) {
     if (!text) {
@@ -177,13 +194,17 @@ export function createHud({ onEditLayout } = {}) {
     mount,
     update,
     setTimer,
+    hideTimer,
     setHint,
     showBanner,
     showToast,
     roundOver,
     gameOver,
     show: () => (hud.hidden = false),
-    hide: () => (hud.hidden = true),
+    hide: () => {
+      hud.hidden = true;
+      clock.hidden = true;
+    },
     rollBtn,
   };
 }

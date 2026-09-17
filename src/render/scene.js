@@ -110,16 +110,37 @@ export function createStage(container) {
   }
 
   const quality = { high: true };
+  const toneExposure = (high) => {
+    renderer.toneMappingExposure = high ? 1.08 : 1.16; // 그림자가 없으면 살짝 눌러 준다
+  };
+
+  /**
+   * 낮음: 그림자를 아예 끄고, 픽셀 비율을 1 로 내리고, 환경광 반사를 줄인다.
+   * 태블릿처럼 느린 기기에서 프레임이 확실히 가벼워진다.
+   */
   function setQuality(high) {
     quality.high = high;
     renderer.setPixelRatio(high ? Math.min(window.devicePixelRatio, 2) : 1);
-    key.shadow.mapSize.set(high ? 2048 : 1024, high ? 2048 : 1024);
+
+    renderer.shadowMap.enabled = high;
+    key.castShadow = high;
+    key.shadow.mapSize.set(high ? 2048 : 512, high ? 2048 : 512);
     key.shadow.radius = high ? 4 : 1;
     if (key.shadow.map) {
       key.shadow.map.dispose();
       key.shadow.map = null;
     }
     renderer.shadowMap.needsUpdate = true;
+
+    // 그림자를 켜고 끄면 셰이더를 다시 만들어야 한다
+    scene.traverse((o) => {
+      if (!o.material) return;
+      for (const m of Array.isArray(o.material) ? o.material : [o.material]) m.needsUpdate = true;
+    });
+
+    scene.environmentIntensity = high ? 0.85 : 0.6;
+    lamp.intensity = high ? 60 : 34;
+    toneExposure(high);
   }
   setQuality(true);
 

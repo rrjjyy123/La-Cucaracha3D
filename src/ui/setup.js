@@ -1,4 +1,4 @@
-// 시작 화면 — 인원, 이름, 함정, 속도, 제한 시간, 승리 방식, 첫 배치
+// 시작 화면 — 인원, 이름, 함정, 속도, 제한 시간, 첫 배치
 import { PINS, TRAP_IDS, OPPOSITE, getTrap } from '../game/board.js';
 import { LAYOUTS } from '../game/layouts.js';
 import { loadCustomLayouts, deleteCustomLayout } from '../game/state.js';
@@ -79,7 +79,6 @@ export function createSetup({ onStart, onResume, onOpenRules, onEditLayout }) {
   let count = 3;
   let players = [];
   let speed = 'normal';
-  let mode = 'win';
   let layoutId = LAYOUTS[0].id;
 
   /** 입력창 + 무제한 체크박스 → 초 (0 이면 무제한) */
@@ -188,14 +187,13 @@ export function createSetup({ onStart, onResume, onOpenRules, onEditLayout }) {
     renderRows();
   });
   bindSeg('#speed-seg', (d) => (speed = d.speed));
-  bindSeg('#mode-seg', (d) => (mode = d.mode));
 
   unlimited.addEventListener('change', () => (secInput.disabled = unlimited.checked));
   secInput.addEventListener('blur', () => writeSeconds(readSeconds()));
 
   const config = () => ({
     players: players.map((p) => ({ ...p })),
-    settings: { speed, turnSeconds: readSeconds(), mode, layoutId },
+    settings: { speed, turnSeconds: readSeconds(), layoutId }, // 승리 방식은 기본 규칙으로 고정
   });
 
   $('#btn-start').addEventListener('click', () => onStart(config()));
@@ -221,12 +219,10 @@ export function createSetup({ onStart, onResume, onOpenRules, onEditLayout }) {
       count = saved.players.length;
       players = saved.players.map((p) => ({ ...p }));
       speed = saved.settings.speed;
-      mode = saved.settings.mode;
       layoutId = saved.layoutId;
       writeSeconds(saved.settings.turnSeconds ?? 15);
       $$('#player-count button').forEach((b) => b.classList.toggle('active', +b.dataset.n === count));
       $$('#speed-seg button').forEach((b) => b.classList.toggle('active', b.dataset.speed === speed));
-      $$('#mode-seg button').forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
       renderRows();
       renderLayouts();
     },

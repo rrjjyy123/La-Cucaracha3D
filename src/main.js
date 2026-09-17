@@ -95,6 +95,7 @@ function render() {
 function startTurnTimer() {
   turnLeft = game.settings.turnSeconds || 0;
   lastTick = 99;
+  if (!game.settings.turnSeconds) hud.hideTimer();
 }
 
 function beginRound(g) {
@@ -172,6 +173,7 @@ function doPass() {
 async function onCaught(trapId) {
   running = false;
   busy = true;
+  hud.hideTimer();
   sfx.stopSkitter();
   const part = board.trapParts[trapId];
   const owner = game.players.find((p) => p.trap === trapId);
@@ -223,7 +225,12 @@ stage.onFrame.add((dt, time) => {
     // 차례 제한 시간
     if (game.settings.turnSeconds) {
       turnLeft -= dt;
-      hud.setTimer(game.current, Math.max(0, turnLeft / game.settings.turnSeconds));
+      hud.setTimer(
+        game.current,
+        Math.max(0, turnLeft / game.settings.turnSeconds),
+        turnLeft,
+        currentPlayer(game).color,
+      );
       const whole = Math.ceil(turnLeft);
       if (whole <= 2 && whole > 0 && whole !== lastTick) {
         lastTick = whole;
@@ -321,6 +328,7 @@ $('#btn-quality').addEventListener('click', (e) => {
   const high = !stage.quality.high;
   stage.setQuality(high);
   e.currentTarget.textContent = `그래픽 품질: ${high ? '높음' : '낮음'}`;
+  hud.showToast(high ? '그래픽 품질 높음 — 그림자 켜짐' : '그래픽 품질 낮음 — 그림자 꺼짐');
 });
 
 $('#btn-sound').addEventListener('click', (e) => {
